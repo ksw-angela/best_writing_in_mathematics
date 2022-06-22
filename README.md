@@ -1,1 +1,1 @@
-# extended_yard_sale_simulation
+Features code associated with the Best Writing on Mathematics series by Mircea Pitici
