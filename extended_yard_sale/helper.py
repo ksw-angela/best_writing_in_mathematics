@@ -4,6 +4,15 @@ from tqdm.notebook import tqdm
 
 
 class Wealth:
+    """Stores the wealth of an even number of people as a dictionary.
+
+        Args:
+            start_wealth (dict): Wealth for an even number of people
+
+        Attributes:
+            start_wealth (dict): Wealth for an even number of people
+
+    """
     def __init__(self, start_wealth):
         self._validate_wealth(start_wealth)
         self.wealth = start_wealth
