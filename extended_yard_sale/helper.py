@@ -10,20 +10,18 @@ class Wealth:
 
     @staticmethod
     def _validate_wealth(wealth):
-        # is a pandas dataframe
-        if not isinstance(wealth, pd.DataFrame):
-            raise Exception('start_wealth needs to be of type pandas dataframe')
+        """Validates the wealth dictionary.
 
-        # columns are ['person', 'wealth']
-        if list(wealth) != ['person', 'wealth']:
-            raise Exception(r'start_wealth needs columns: "person" and "wealth"')
+        :param wealth: dictionary
+        :return: None
+        """
+        if not isinstance(wealth, dict):
+            raise Exception('start_wealth needs to be a dictionary')
 
-        # wealth is made of integers
-        if wealth['wealth'].dtypes != 'int':
-            raise Exception('start_wealth needs integer wealth column')
+        if any(value != 'int' for value in wealth.values()):
+            raise Exception('start_wealth needs wealth represented as an integer')
 
-        # there are even number of rows
-        if len(wealth.index) % 2 != 0:
+        if len(wealth.keys()) % 2 != 0:
             raise Exception('start_wealth needs an even number of people')
 
     def plot_wealth(self):
