@@ -30,7 +30,7 @@ class Wealth:
         if any(value != 'int' for value in wealth.values()):
             raise Exception('start_wealth needs wealth represented as an integer')
 
-        if len(wealth.keys()) % 2 != 0:
+        if len(wealth.keys()) % 2 != 0 or len(wealth.keys()) == 0:
             raise Exception('start_wealth needs an even number of people')
 
     def plot_wealth(self):
@@ -93,11 +93,12 @@ class ExtendedYardSale(Wealth):
         self.chi = chi
         self.zeta = zeta
         self.kappa = kappa
-        self._n_people = len(self.wealth.index)
+        self._n_people = len(self.wealth.keys())
 
     def _update_average_wealth(self):
-        # calculate average wealth of all people in the yard sale
-        self._avg_wealth = self.wealth['wealth'].mean()
+        """Calculates the average wealth of all people in the yard sale and updates the
+        _avg_wealth attribute."""
+        self._avg_wealth = np.mean(self.wealth.values())
 
     def _pay_tax(self):
         """Updates the wealth attribute in the following way:
