@@ -34,7 +34,12 @@ class Wealth:
             raise Exception('start_wealth needs an even number of people')
 
     def plot_wealth(self):
-        pass
+        """Plots the wealth dictionary as a histogram.
+
+        :return: None
+        """
+        plt.bar(self.wealth.keys(), self.wealth.values())
+        plt.show()
 
 
 class ExtendedYardSale(Wealth):
