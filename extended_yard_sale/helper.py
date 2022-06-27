@@ -28,9 +28,6 @@ class Wealth:
         if not isinstance(wealth, dict):
             raise Exception('start_wealth needs to be a dictionary')
 
-        if any(value != 'int' for value in wealth.values()):
-            raise Exception('start_wealth needs wealth represented as an integer')
-
         if len(wealth.keys()) % 2 != 0 or len(wealth.keys()) == 0:
             raise Exception('start_wealth needs an even number of people')
 
