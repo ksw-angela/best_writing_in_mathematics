@@ -166,8 +166,8 @@ class ExtendedYardSale(Wealth):
             wealth_values = list(p.values())
             wealth_difference = abs(wealth_values[0] - wealth_values[1])
             bias = self.zeta * wealth_difference
-            dice_rolls.append(random.choices(range(1),
-                                             [(0.5 + bias) / (1 + bias), 0.5 / (1 + bias)]))
+            weights = [(0.5 + bias) / (1 + bias), 0.5 / (1 + bias)]
+            dice_rolls.append(random.choices(population=[0, 1], weights=weights)[0])
         return dice_rolls
 
     def _exchange_wealth(self, wealth_permutation, dice_rolls):
