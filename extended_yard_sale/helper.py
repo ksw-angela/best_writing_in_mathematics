@@ -115,77 +115,74 @@ class ExtendedYardSale(Wealth):
           to the chi attribute
         - People poorer than the average equally share the tax paid by the richer people
         """
-        tax = self.chi * self.wealth.loc[self.wealth['wealth'] > self._avg_wealth, 'wealth'].sum()
-        per_person_subsidy = round(
-            tax / len(self.wealth.loc[self.wealth['wealth'] <= self._avg_wealth].index))
-        self.wealth.loc[self.wealth['wealth'] > self._avg_wealth, 'wealth'] -= tax
-        self.wealth.loc[self.wealth['wealth'] <= self._avg_wealth, 'wealth'] += per_person_subsidy
+        rich = {p: w for p, w in self.wealth.items() if w > self._avg_wealth}
+        poor = {p: w for p, w in self.wealth.items() if w <= self._avg_wealth}
+        tax = self.chi * np.sum(rich.values())
+        per_person_subsidy = round(tax / len(poor.keys()))
+        rich = {p: w - tax for p, w in rich}
+        poor = {p: w + per_person_subsidy for p, w in poor}
+        self.wealth = {**rich, **poor}
 
     def _loan_S(self):
         """Updates the wealth attribute for all people by providing a loan proportional to
         the attribute kappa before the transaction.
         """
-        self.wealth.loc[:, 'wealth'] = self.wealth.loc[:, 'wealth'] + (
-                    self.kappa * self._avg_wealth)
+        self.wealth = {p: w + (self.kappa * self._avg_wealth) for p, w in self.wealth.items()}
 
     def _collect_S(self):
         """Updates the wealth attribute for all people by paying back the loan after
         the transaction.
         """
-        self.wealth.loc[:, 'wealth'] = self.wealth.loc[:, 'wealth'] - (
-                    self.kappa * self._avg_wealth)
+        self.wealth = {p: w - (self.kappa * self._avg_wealth) for p, w in self.wealth.items()}
 
-    def _add_pair_id(self):
-        """Returns a dictionary of dictionaries with transacting members of form:
-            {pair_id: {person_id: wealth}}
-        The pair_id is shared among transacting pairs. For each pair_id, there should only be two
-        person_id's.
+    def _pair_people(self):
+        """Returns a list of dictionaries with transacting members.
+        Each element of the list represents a pair of people that will transact.
+
         :return: object
         """
-        wealth_permutation = self.wealth.sample(frac=1).reset_index(drop=True)
-        wealth_permutation['group'] = list(range(int(self._n_people / 2))) * 2
-        return wealth_permutation
+        people = list(self.wealth.keys())
+        pair_ids = np.array(random.sample(people, self._n_people)).reshape(-1, 2)
+        pair_wealths = []
+        for p in pair_ids:
+            pair_wealth = {k: self.wealth[k] for k in p}
+            pair_wealths.append(pair_wealth)
+        return pair_wealths
 
-    def _add_dice_roll(self, wealth_permutation):
+    def _roll_dice(self, pair_wealths):
         """Determine the winner of the transaction for all pairs.
 
         Include the bias that gives the wealthier person the advantage.
         Let 0 be a win for the richer person and 1 for the poorer person.
 
-        :param wealth_permutation: dictionary of dictionaries of form:
-            {pair_id: {person_id: wealth}}
+        :param pair_wealths: list of dictionaries
         :return: object
         """
-        wealth_difference = (wealth_permutation.groupby('group')['wealth'].max()
-                             - wealth_permutation.groupby('group')['wealth'].min()).reset_index(
-            drop=True)
-        bias = 0.5 * (1 + self.zeta * wealth_difference)
         dice_rolls = []
-        for i in bias:
-            roll = np.random.choice(np.arange(0, 2), p=[i, 1 - i])
-            dice_rolls.append(roll)
-        wealth_permutation['dice_roll'] = dice_rolls * 2
-        del wealth_difference, bias
-        return wealth_permutation
+        for p in pair_wealths:
+            wealth_values = list(p.values())
+            wealth_difference = abs(wealth_values[0] - wealth_values[1])
+            bias = self.zeta * wealth_difference
+            dice_rolls.append(random.choices(range(1),
+                                             [(0.5 + bias) / (1 + bias), 0.5 / (1 + bias)]))
+        return dice_rolls
 
-    def _exchange_wealth(self, wealth_permutation):
+    def _exchange_wealth(self, wealth_permutation, dice_rolls):
         """Return the updated wealth with money moving from the loser to the winner.
 
         :param wealth_permutation: dictionary of dictionaries of form:
             {pair_id: {person_id: wealth}}
+        :param dice_rolls: dictionary of dice rolls
         :return: object
         """
-        exchange_amount = self.win_percentage * wealth_permutation.groupby('group')['wealth'] \
-            .min().reset_index(drop=True)
-        poor = wealth_permutation.sort_values(['group', 'wealth']) \
-            .drop_duplicates('group', keep='first').reset_index(drop=True)
-        rich = wealth_permutation.sort_values(['group', 'wealth']) \
-            .drop_duplicates('group', keep='last').reset_index(drop=True)
-        poor['wealth'] += ((2 * poor['dice_roll'] - 1) * exchange_amount).round(2)
-        rich['wealth'] += ((1 - 2 * rich['dice_roll']) * exchange_amount).round(2)
-        wealth_permutation = pd.concat([poor, rich])
-        del exchange_amount, poor, rich
-        return wealth_permutation
+        wealth = {}
+        for pair, roll in zip(wealth_permutation, dice_rolls):
+            exchange_amount = np.mean(list(pair.values())) * self.win_percentage
+            poor = min(pair, key=pair.get)
+            rich = max(pair, key=pair.get)
+            wealth[poor] = pair[poor] + ((2 * roll - 1) * exchange_amount).round(2)
+            wealth[rich] = pair[rich] + ((1 - 2 * roll) * exchange_amount).round(2)
+        return wealth
 
     def perform_sale(self):
         """Runs a single iteration of the extended yard sale model and updates the wealth attribute.
@@ -195,10 +192,10 @@ class ExtendedYardSale(Wealth):
         self._update_average_wealth()
         self._pay_tax()
         self._loan_S()
-        wealth_permutation = self._add_pair_id()
-        wealth_permutation = self._add_dice_roll(wealth_permutation)
-        wealth_permutation = self._exchange_wealth(wealth_permutation)
-        self.wealth = wealth_permutation[['person', 'wealth']].reset_index(drop=True)
+        wealth_permutation = self._pair_people()
+        dice_rolls = self._roll_dice(wealth_permutation)
+        wealth = self._exchange_wealth(wealth_permutation, dice_rolls)
+        self.wealth = wealth
         self._collect_S()
 
     def run_yard_sale(self, plot_n=1000, plot=True):
