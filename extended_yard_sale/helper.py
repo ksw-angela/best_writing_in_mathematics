@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
@@ -67,17 +68,17 @@ class ExtendedYardSale(Wealth):
     def __init__(self,
                  start_wealth,
                  win_percentage,
-                 n=10000,
                  chi=0,
                  zeta=0,
-                 kappa=0):
+                 kappa=0,
+                 n=10000,
+                 seed=0):
         """Initializes the extended yard sale model.
 
         Args:
             start_wealth (dict): Wealth of all transacting parties.
             win_percentage (float): Percentage of the poorer person's wealth that is moved from the
                 loser of the transaction to the winner.
-            n (int): Number of transactions. Defaults to 10000.
             chi (float): Tax rate paid before each transaction by people who's wealth exceeds the
                 average wealth of the system and is distributed equally to people who's wealth
                 is below the average wealth of the system. Defaults to 0, or no tax being paid.
@@ -90,15 +91,18 @@ class ExtendedYardSale(Wealth):
                     S = kappa * average wealth
                 Before each transaction, we loan S to both agents so both have positive wealth.
                 After the transaction is complete, both parties repay their debt of S.
+            n (int): Number of transactions. Defaults to 10000.
+            seed (int): Optional random seed.
 
         """
         super().__init__(start_wealth)
         self.win_percentage = win_percentage
-        self.n = n
         self.chi = chi
         self.zeta = zeta
         self.kappa = kappa
+        self.n = n
         self._n_people = len(self.wealth.keys())
+        random.seed(seed)
 
     def _update_average_wealth(self):
         """Calculates the average wealth of all people in the yard sale and updates the
