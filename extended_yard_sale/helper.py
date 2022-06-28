@@ -104,7 +104,7 @@ class ExtendedYardSale(Wealth):
     def _update_average_wealth(self):
         """Calculates the average wealth of all people in the yard sale and updates the
         _avg_wealth attribute."""
-        self._avg_wealth = np.mean(list(self.wealth.values()))
+        self._avg_wealth = (np.mean(list(self.wealth.values()))).round(2)
 
     def _pay_tax(self):
         """Updates the wealth attribute in the following way:
@@ -118,11 +118,11 @@ class ExtendedYardSale(Wealth):
         tax = self.chi * np.sum(list(rich.values()))
 
         if len(poor.keys()) > 0:
-            per_person_subsidy = round(tax / len(poor.keys()))
+            per_person_subsidy = (tax / len(poor.keys())).round(2)
             poor = {p: w + per_person_subsidy for p, w in poor.items()}
 
         if len(rich.keys()) > 0:
-            rich = {p: w - (w * tax) for p, w in rich.items()}
+            rich = {p: (w - (w * tax)).round(2) for p, w in rich.items()}
 
         self.wealth = {**rich, **poor}
 
@@ -130,13 +130,13 @@ class ExtendedYardSale(Wealth):
         """Updates the wealth attribute for all people by providing a loan proportional to
         the attribute kappa before the transaction.
         """
-        self.wealth = {p: w + (self.kappa * self._avg_wealth) for p, w in self.wealth.items()}
+        self.wealth = {p: (w + (self.kappa * self._avg_wealth)).round(2) for p, w in self.wealth.items()}
 
     def _collect_S(self):
         """Updates the wealth attribute for all people by paying back the loan after
         the transaction.
         """
-        self.wealth = {p: w - (self.kappa * self._avg_wealth) for p, w in self.wealth.items()}
+        self.wealth = {p: (w - (self.kappa * self._avg_wealth)).round(2) for p, w in self.wealth.items()}
 
     def _pair_people(self):
         """Returns a list of dictionaries with transacting members.
@@ -189,8 +189,8 @@ class ExtendedYardSale(Wealth):
             else:
                 poor = min(pair, key=pair.get)
                 rich = max(pair, key=pair.get)
-            wealth[poor] = pair[poor] + ((2 * roll - 1) * exchange_amount).round(2)
-            wealth[rich] = pair[rich] + ((1 - 2 * roll) * exchange_amount).round(2)
+            wealth[poor] = (pair[poor] + ((2 * roll - 1) * exchange_amount)).round(2)
+            wealth[rich] = (pair[rich] + ((1 - 2 * roll) * exchange_amount)).round(2)
         self.wealth = wealth
 
     def perform_sale(self):
