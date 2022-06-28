@@ -159,7 +159,7 @@ class ExtendedYardSale(Wealth):
         Let 0 be a win for the richer person and 1 for the poorer person.
 
         :param pair_wealths: list of dictionaries
-        :return: object
+        :return: list
         """
         dice_rolls = []
         for p in pair_wealths:
@@ -171,12 +171,12 @@ class ExtendedYardSale(Wealth):
         return dice_rolls
 
     def _exchange_wealth(self, wealth_permutation, dice_rolls):
-        """Return the updated wealth with money moving from the loser to the winner.
+        """Updates the wealth attribute by moving money from the loser to the winner.
 
         :param wealth_permutation: dictionary of dictionaries of form:
             {pair_id: {person_id: wealth}}
-        :param dice_rolls: dictionary of dice rolls
-        :return: object
+        :param dice_rolls: list of dice rolls
+        :return: None
         """
         wealth = {}
         for pair, roll in zip(wealth_permutation, dice_rolls):
@@ -197,8 +197,7 @@ class ExtendedYardSale(Wealth):
         self._loan_S()
         wealth_permutation = self._pair_people()
         dice_rolls = self._roll_dice(wealth_permutation)
-        wealth = self._exchange_wealth(wealth_permutation, dice_rolls)
-        self.wealth = wealth
+        self._exchange_wealth(wealth_permutation, dice_rolls)
         self._collect_S()
 
     def run_yard_sale(self, plot_n=1000, plot=True):
