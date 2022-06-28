@@ -180,9 +180,9 @@ class ExtendedYardSale(Wealth):
         """
         wealth = {}
         for pair, roll in zip(wealth_permutation, dice_rolls):
-            exchange_amount = np.mean(list(pair.values())) * self.win_percentage
             pair_values = list(pair.values())
             pair_keys = list(pair.keys())
+            exchange_amount = min(pair_values) * self.win_percentage
             if pair_values[0] == pair_values[1]:
                 poor = pair_keys[0]
                 rich = pair_keys[1]
