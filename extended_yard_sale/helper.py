@@ -1,7 +1,19 @@
 import random
 import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.express as px
 from tqdm.notebook import tqdm
+
+
+def plot_wealth(yard_sale, n):
+    """Plots the wealth dictionary as a histogram.
+
+    :return: None
+    """
+    wealth = pd.DataFrame({'person': list(yard_sale[n].keys()),
+                           'wealth': list(yard_sale[n].values())})
+    fig = px.bar(wealth, x='person', y='wealth')
+    fig.show()
 
 
 class Wealth:
@@ -30,14 +42,6 @@ class Wealth:
 
         if len(wealth.keys()) % 2 != 0 or len(wealth.keys()) == 0:
             raise Exception('start_wealth needs an even number of people')
-
-    def plot_wealth(self):
-        """Plots the wealth dictionary as a histogram.
-
-        :return: None
-        """
-        plt.bar(self.wealth.keys(), self.wealth.values())
-        plt.show()
 
 
 class ExtendedYardSale(Wealth):
@@ -119,10 +123,10 @@ class ExtendedYardSale(Wealth):
 
         if len(poor.keys()) > 0:
             per_person_subsidy = (tax / len(poor.keys())).round(2)
-            poor = {p: w + per_person_subsidy for p, w in poor.items()}
+            poor = {p: (w + per_person_subsidy).round(2) for p, w in poor.items()}
 
         if len(rich.keys()) > 0:
-            rich = {p: (w - (w * tax)).round(2) for p, w in rich.items()}
+            rich = {p: (w - (w * self.chi)).round(2) for p, w in rich.items()}
 
         self.wealth = {**rich, **poor}
 
@@ -216,10 +220,13 @@ class ExtendedYardSale(Wealth):
         """
         if plot & (plot_n > self.n):
             raise Exception('plot_n needs to be lower than n')
-        for i in tqdm(range(self.n)):
+        yard_sale = {}
+        for i in tqdm(range(1, self.n+1)):
             self.perform_sale()
             if plot & (i % plot_n == 0):
-                super().plot_wealth()
+                yard_sale[i] = self.wealth
+        if plot:
+            return yard_sale
 
     def _get_sale_stats(self):
         pass
