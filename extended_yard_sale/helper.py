@@ -43,6 +43,44 @@ class Wealth:
         if len(wealth.keys()) % 2 != 0 or len(wealth.keys()) == 0:
             raise Exception('start_wealth needs an even number of people')
 
+    def sort_wealth(self):
+        """Returns the wealth attribute's values as a sorted numpy array.
+
+        :return: numpy array
+        """
+        wealth_values = list(self.wealth.values())
+        sorted_wealth = np.sort(wealth_values)
+        return sorted_wealth
+
+    def calc_gini(self):
+        """Returns the gini coefficient of the wealth distribution based on the values of the
+        wealth attribute.
+
+        :return: float
+        """
+        sorted_wealth = self.sort_wealth()
+        n = len(self.wealth.keys())
+        coef = 2. / n
+        const = (n + 1.) / n
+        weighted_sum = sum([(i + 1) * yi for i, yi in enumerate(sorted_wealth)])
+        gini = coef * weighted_sum / np.sum(sorted_wealth) - const
+        return gini
+
+    def plot_lorenz_curve(self):
+        """Plots the lorenz curve which shows the wealth inequality.
+
+        :return: None
+        """
+        sorted_wealth = self.sort_wealth()
+        wealth_values_lorenz = np.cumsum(sorted_wealth) / np.sum(sorted_wealth)
+        wealth_values_lorenz = np.insert(wealth_values_lorenz, 0, 0)
+        wealth_df = pd.DataFrame(
+            {'x': np.arange(wealth_values_lorenz.size) / (wealth_values_lorenz.size - 1),
+             'y': wealth_values_lorenz})
+        fig = px.scatter(wealth_df, x='x', y='y')
+        fig.add_shape(type='line', x0=0, x1=1, y0=0, y1=1, line_dash='dash', line_color='#C3C3C3')
+        fig.show()
+
 
 class ExtendedYardSale(Wealth):
     """Conducts the extended yard sale for a given wealth dictionary.
@@ -227,6 +265,9 @@ class ExtendedYardSale(Wealth):
                 yard_sale[i] = self.wealth
         if plot:
             return yard_sale
+
+    def plot_lorenz_curve(self):
+        super().plot_lorenz_curve()
 
     def _get_sale_stats(self):
         pass
