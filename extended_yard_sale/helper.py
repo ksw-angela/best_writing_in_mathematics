@@ -146,7 +146,7 @@ class ExtendedYardSale(Wealth):
     def _update_average_wealth(self):
         """Calculates the average wealth of all people in the yard sale and updates the
         _avg_wealth attribute."""
-        self._avg_wealth = (np.mean(list(self.wealth.values()))).round(2)
+        self._avg_wealth = np.mean(list(self.wealth.values()))
 
     def _pay_tax(self):
         """Updates the wealth attribute in the following way:
@@ -158,9 +158,10 @@ class ExtendedYardSale(Wealth):
         poor = {p: w for p, w in self.wealth.items() if w <= self._avg_wealth}
 
         tax = self.chi * np.sum(list(rich.values()))
+        tax = (tax // 0.01) / 100
 
         if len(poor.keys()) > 0:
-            per_person_subsidy = (tax / len(poor.keys())).round(2)
+            per_person_subsidy = tax / len(poor.keys())
             poor = {p: (w + per_person_subsidy).round(2) for p, w in poor.items()}
 
         if len(rich.keys()) > 0:
